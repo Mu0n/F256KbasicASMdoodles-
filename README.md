@@ -9,7 +9,7 @@ Foenix Retro Systems is a homebrew effort to bring 8/16/32-bit era processors in
 ## ASM 'simple doodles'
 These simple examples in 65c02 compatible assembly are my first steps into discovering the machine and its graphic, sound and input capabilities.
 
-To run these, simply copy them over (probably using an SD card) and load them with `/- 'program name.bas'`. I'm assuming you have a recent enough version of pexec.bin in your flash firmware. A good place to start would be to fetch at least release 2023.5 from this github repository: https://github.com/FoenixRetro/f256-firmware/ 
+To run these, simply copy them over (probably using an SD card) and load them with `/- 'program name.pgz'`. I'm assuming you have a recent enough version of pexec.bin in your flash firmware. A good place to start would be to fetch at least release 2023.5 from this github repository: https://github.com/FoenixRetro/f256-firmware/ 
 
 To compile these, here's what you should have:
 - 64tass from: https://sourceforge.net/projects/tass64/
