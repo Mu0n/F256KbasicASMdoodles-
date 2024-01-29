@@ -16,7 +16,8 @@ To compile these, here's what you should have:
 - Gnu.win32 (optional) from: https://gnuwin32.sourceforge.net/packages/make.htm but I recommend using a package manager (under Windows) by copying this command line unders a cmd window: https://winget.run/pkg/GnuWin32/Make and adding its /bin/ folder to your system environment variables (add an entry to PATH)
 
 either use the optional make command (assuming gnu.win32 is installed) while in the folder of the asm program to make use of the provided Makefile,
-or adapt this command to your needs: 64tass -c --output-exec=start --c256-pgz example.asm -L example.lst -o example.pgz
+or adapt this command to your needs: 
+> 64tass -c --output-exec=start --c256-pgz example.asm -L example.lst -o example.pgz
 (this assumes your program name is "example.asm" and that you have a label inside named "start" which points to the entry point of your executable code)
 
 ## Hello World in text mode
