@@ -18,6 +18,7 @@ To compile these, here's what you should have:
 either use the optional make command (assuming gnu.win32 is installed) while in the folder of the asm program to make use of the provided Makefile,
 or adapt this command to your needs: 
 > 64tass -c --output-exec=start --c256-pgz example.asm -L example.lst -o example.pgz
+
 (this assumes your program name is "example.asm" and that you have a label inside named "start" which points to the entry point of your executable code)
 
 ## Hello World in text mode
