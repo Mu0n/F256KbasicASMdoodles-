@@ -1,0 +1,38 @@
+
+; 64tass Turbo Assembler Macro V1.59.3120 listing file
+; 64tass --output-exec=start --c256-pgz -C -Wall --verbose-list -L helloworld.lst -o helloworld.pgz helloworld.asm
+; Mon Jan 29 15:37:02 2024
+
+;Offset	;Hex		;Monitor	;Source
+
+;******  Processing input file: helloworld.asm
+
+								.cpu		"w65c02"
+
+								.virtual $0000 ; zero page address references
+>0000					mmu_ctrl	.byte 	?
+>0001					io_ctrl		.byte 	?
+>0002					reserved	.fill	6
+>0008					mmu			.fill	8
+								.endv
+
+					*			= $2000  ; set for slot 1, aligned at every $2000 multiples
+
+.2000	a9 02		lda #$02	start:		lda		#$2  ; set io_ctrl to 2 so we can access the screen text memory
+.2002	85 01		sta $01					sta		io_ctrl
+.2004	a0 00		ldy #$00				ldy		#0	;start the text counter
+.2006	b9 19 20	lda $2019,y	_textloop:	lda		_text,y
+.2009	f0 08		beq $2013				beq 	_ending 	;if we're finished, go to endless loop
+.200b	99 00 c0	sta $c000,y				sta 	$C000,y ;start writing at the top left of text memory, offset by y's value
+.200e	c8		iny					iny 			;increment y
+.200f	80 f5		bra $2006				bra		_textloop	;keep going through the text
+.2011	85 01		sta $01					sta		io_ctrl
+.2013	a9 00		lda #$00	_ending		lda		#$0
+.2015	85 01		sta $01					sta		io_ctrl	;no reason to put back the original value, but good practice to reset io_ctrl
+.2017	80 fe		bra $2017	_deathloop:	bra 	_deathloop	; just reset the machine or power cycle at this point, no going back to basic or dos
+>2019	20 57 65 6c 63 6f 6d 65		_text: 		.null 	" Welcome to this amazing first asm example program"
+>2021	20 74 6f 20 74 68 69 73 20 61 6d 61 7a 69 6e 67
+>2031	20 66 69 72 73 74 20 61 73 6d 20 65 78 61 6d 70
+>2041	6c 65 20 70 72 6f 67 72 61 6d 00
+
+;******  End of listing
