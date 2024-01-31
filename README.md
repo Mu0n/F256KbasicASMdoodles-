@@ -30,3 +30,13 @@ Should write a simple text message in the first line of text on screen, over wha
 ### Files that are expected in the same directory:
 
 * `helloworld.pgz`
+
+## Sprite showing example (from the F256 manual)
+
+![image](https://github.com/Mu0n/F256KsimpleASMdoodles/assets/6774826/f1943fb0-d412-4ced-a743-ac83aec2c465)
+
+Shows a sprite (#0) along with its color look-up table (CLUT) on a lavender background. Based very directly on the sprite example from the manual from pweingar: https://github.com/pweingar/F256Manual 
+
+### Files that are expected in the same directory:
+
+* `sprite.pgz`
