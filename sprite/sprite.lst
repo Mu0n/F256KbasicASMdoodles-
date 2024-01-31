@@ -1,0 +1,181 @@
+
+; 64tass Turbo Assembler Macro V1.59.3120 listing file
+; 64tass --output-exec=start --c256-pgz -C -Wall --verbose-list -L sprite.lst -o sprite.pgz sprite.asm
+; Tue Jan 30 15:25:29 2024
+
+;Offset	;Hex		;Monitor	;Source
+
+;******  Processing input file: sprite.asm
+
+								.cpu		"w65c02"
+
+=$0001					MMU_IO_CTRL = $0001 ; MMU I/O Control Register
+=$d000					VKY_MSTR_CTRL_0 = $D000 ; Vicky Master Control Register 0
+=$d000					VKY_GR_CLUT_0 = $D000
+=$d001					VKY_MSTR_CTRL_1 = $D001 ; Vicky Master Control Register 1
+=$d004					VKY_BRDR_CTRL = $D004 ; Vicky Border Control Register
+=$d00d					VKY_BKG_COL_B = $D00D ; Vicky Graphics Background Color Blue
+=$d00e					VKY_BKG_COL_G = $D00E ; Vicky Graphics Background Color Green
+=$d00f					VKY_BKG_COL_R = $D00F ; Vicky Graphics Background Color Red
+
+=$d900					VKY_SP0_CTRL = $D900 ; Sprite #0â<80><99>s control register
+=$d901					VKY_SP0_AD_L = $D901 ; Sprite #0â<80><99>s pixel data address register
+=$d902					VKY_SP0_AD_M = $D902
+=$d903					VKY_SP0_AD_H = $D903
+=$d904					VKY_SP0_POS_X_L = $D904 ; Sprite #0â<80><99>s X position register
+=$d905					VKY_SP0_POS_X_H = $D905
+=$d906					VKY_SP0_POS_Y_L = $D906 ; Sprite #0â<80><99>s Y position register
+=$d907					VKY_SP0_POS_Y_H = $D907
+
+=$50					ptr_dst = $50
+=$52					ptr_src = $52
+
+								.virtual $0000 ; zero page address references
+>0000					mmu_ctrl	.byte 	?
+>0001					io_ctrl		.byte 	?
+>0002					reserved	.fill	6
+>0008					mmu			.fill	8
+								.endv
+
+					*			= $2000  ; set for slot 1, aligned at every $2000 multiples
+
+.2000					start:
+.2000	64 01		stz $01					stz 	MMU_IO_CTRL ; go to io page 0
+.2002	a9 24		lda #$24				lda		#$24  ; set graphics and sprite engines enabled
+.2004	8d 00 d0	sta $d000				sta		VKY_MSTR_CTRL_0
+.2007	9c 01 d0	stz $d001				stz		VKY_MSTR_CTRL_1 ; set 320x240 @ 60 Hz
+
+.200a	9c 04 d0	stz $d004				stz		VKY_BRDR_CTRL	; no border
+
+.200d	a9 96		lda #$96				lda #$96 ; Background: lavender
+.200f	8d 0f d0	sta $d00f				sta VKY_BKG_COL_R
+.2012	a9 7b		lda #$7b				lda #$7B
+.2014	8d 0e d0	sta $d00e				sta VKY_BKG_COL_G
+.2017	a9 b6		lda #$b6				lda #$B6
+.2019	8d 0d d0	sta $d00d				sta VKY_BKG_COL_B
+					;
+					; Load the sprite LUT into memory
+					;
+.201c	a9 01		lda #$01				lda #$01 ; Switch to I/O Page #1
+.201e	85 01		sta $01					sta MMU_IO_CTRL
+
+.2020	a9 84		lda #$84				lda #<balls_clut_start ; Set the source pointer to the palette
+.2022	85 52		sta $52					sta ptr_src
+.2024	a9 21		lda #$21				lda #>balls_clut_start
+.2026	85 53		sta $53					sta ptr_src+1
+
+.2028	a9 00		lda #$00				lda #<VKY_GR_CLUT_0 ; Set the destination to Graphics CLUT
+.202a	85 50		sta $50					sta ptr_dst
+.202c	a9 d0		lda #$d0				lda #>VKY_GR_CLUT_0
+.202e	85 51		sta $51					sta ptr_dst+1
+
+.2030	a2 00		ldx #$00				ldx #0 ; X is the number of colors copied
+.2032					color_loop:
+.2032	a0 00		ldy #$00				ldy #0 ; Y points to the color component
+.2034					comp_loop:
+.2034	b1 52		lda ($52),y				lda (ptr_src),y ; Read a byte from the code
+.2036	91 50		sta ($50),y				sta (ptr_dst),y ; And write it to the CLUT
+.2038	c8		iny					iny ; Move to the next byte
+.2039	c0 04		cpy #$04				cpy #4
+.203b	d0 f7		bne $2034				bne comp_loop ; Continue until 4 bytes copied
+
+.203d	e8		inx					inx ; Move to the next color
+.203e	e0 10		cpx #$10				cpx #16
+.2040	f0 1c		beq $205e				beq done_lut ; Until we have copied all 16
+
+.2042	18		clc					clc ; Move ptr_src to the next source color
+.2043	a5 52		lda $52					lda ptr_src
+.2045	69 04		adc #$04				adc #4
+.2047	85 52		sta $52					sta ptr_src
+.2049	a5 53		lda $53					lda ptr_src+1
+.204b	69 00		adc #$00				adc #0
+.204d	85 53		sta $53					sta ptr_src+1
+.204f	18		clc					clc ; Move ptr_dst to the next destination
+
+.2050	a5 50		lda $50					lda ptr_dst
+.2052	69 04		adc #$04				adc #4
+.2054	85 50		sta $50					sta ptr_dst
+.2056	a5 51		lda $51					lda ptr_dst+1
+.2058	69 00		adc #$00				adc #0
+.205a	85 51		sta $51					sta ptr_dst+1
+.205c	80 d4		bra $2032				bra color_loop ; And start copying that new color
+
+
+.205e					done_lut:
+.205e	64 01		stz $01					stz MMU_IO_CTRL
+
+					;
+					; Set up sprite #0
+					;
+
+.2060					init_sp0:
+.2060	a9 84		lda #$84				lda #<balls_img_start ; Address = balls_img_start
+.2062	8d 01 d9	sta $d901				sta VKY_SP0_AD_L
+.2065	a9 20		lda #$20				lda #>balls_img_start
+.2067	8d 02 d9	sta $d902				sta VKY_SP0_AD_M
+.206a	9c 03 d9	stz $d903				stz VKY_SP0_AD_H
+.206d	a9 64		lda #$64				lda #100
+.206f	8d 04 d9	sta $d904				sta VKY_SP0_POS_X_L ; (x, y) = (100, 80)... should be
+.2072	9c 05 d9	stz $d905				stz VKY_SP0_POS_X_H ; upper-left corner of the screen
+.2075	a9 50		lda #$50				lda #80
+.2077	8d 06 d9	sta $d906				sta VKY_SP0_POS_Y_L
+.207a	9c 07 d9	stz $d907				stz VKY_SP0_POS_Y_H
+.207d	a9 41		lda #$41				lda #$41 ; Size=16x16, Layer=0, LUT=0, Enabled
+.207f	8d 00 d9	sta $d900				sta VKY_SP0_CTRL
+
+
+.2082					_deathloop:
+.2082	80 fe		bra $2082				bra 	_deathloop	; just reset the machine or power cycle at this point, no going back to basic or dos
+
+.2084					balls_img_start:
+>2084	00 00 00 00 00 00 03 02		.byte $0, $0, $0, $0, $0, $0, $3, $2, $2, $1, $0, $0, $0, $0, $0, $0
+>208c	02 01 00 00 00 00 00 00
+>2094	00 00 00 00 05 05 04 03		.byte $0, $0, $0, $0, $5, $5, $4, $3, $3, $3, $3, $2, $0, $0, $0, $0
+>209c	03 03 03 02 00 00 00 00
+>20a4	00 00 00 07 07 07 06 05		.byte $0, $0, $0, $7, $7, $7, $6, $5, $4, $4, $3, $3, $1, $0, $0, $0
+>20ac	04 04 03 03 01 00 00 00
+>20b4	00 00 07 09 0a 0b 0a 08		.byte $0, $0, $7, $9, $A, $B, $A, $8, $6, $5, $4, $3, $2, $1, $0, $0
+>20bc	06 05 04 03 02 01 00 00
+>20c4	00 05 07 0a 0d 0e 0d 0a		.byte $0, $5, $7, $A, $D, $E, $D, $A, $7, $5, $5, $4, $3, $1, $1, $0
+>20cc	07 05 05 04 03 01 01 00
+>20d4	00 05 07 0b 0e 0e 0e 0c		.byte $0, $5, $7, $B, $E, $E, $E, $C, $7, $5, $5, $4, $3, $1, $1, $0
+>20dc	07 05 05 04 03 01 01 00
+>20e4	03 04 06 0a 0d 0e 0d 0a		.byte $3, $4, $6, $A, $D, $E, $D, $A, $7, $5, $5, $4, $3, $2, $1, $1
+>20ec	07 05 05 04 03 02 01 01
+>20f4	02 03 05 08 0a 0c 0a 08		.byte $2, $3, $5, $8, $A, $C, $A, $8, $6, $5, $5, $4, $3, $2, $1, $1
+>20fc	06 05 05 04 03 02 01 01
+>2104	02 03 04 06 07 07 07 06		.byte $2, $3, $4, $6, $7, $7, $7, $6, $5, $5, $5, $4, $3, $1, $1, $1
+>210c	05 05 05 04 03 01 01 01
+>2114	01 03 04 05 05 05 05 05		.byte $1, $3, $4, $5, $5, $5, $5, $5, $5, $5, $5, $3, $3, $1, $1, $1
+>211c	05 05 05 03 03 01 01 01
+>2124	00 03 03 04 05 05 05 05		.byte $0, $3, $3, $4, $5, $5, $5, $5, $5, $5, $4, $3, $2, $1, $1, $0
+>212c	05 05 04 03 02 01 01 00
+>2134	00 02 03 03 04 04 04 04		.byte $0, $2, $3, $3, $4, $4, $4, $4, $4, $3, $3, $2, $1, $1, $1, $0
+>213c	04 03 03 02 01 01 01 00
+>2144	00 00 01 02 03 03 03 03		.byte $0, $0, $1, $2, $3, $3, $3, $3, $3, $3, $2, $1, $1, $1, $0, $0
+>214c	03 03 02 01 01 01 00 00
+>2154	00 00 00 01 01 01 02 02		.byte $0, $0, $0, $1, $1, $1, $2, $2, $1, $1, $1, $1, $1, $0, $0, $0
+>215c	01 01 01 01 01 00 00 00
+>2164	00 00 00 00 01 01 01 01		.byte $0, $0, $0, $0, $1, $1, $1, $1, $1, $1, $1, $1, $0, $0, $0, $0
+>216c	01 01 01 01 00 00 00 00
+>2174	00 00 00 00 00 00 01 01		.byte $0, $0, $0, $0, $0, $0, $1, $1, $1, $1, $0, $0, $0, $0, $0, $0
+>217c	01 01 00 00 00 00 00 00
+
+.2184					balls_clut_start:
+>2184	00 00 00 00			.byte $00, $00, $00, $00
+>2188	88 00 00 00			.byte $88, $00, $00, $00
+>218c	7c 18 00 00			.byte $7C, $18, $00, $00
+>2190	9c 20 1c 00			.byte $9C, $20, $1C, $00
+>2194	90 38 1c 00			.byte $90, $38, $1C, $00
+>2198	b0 40 38 00			.byte $B0, $40, $38, $00
+>219c	a8 54 38 00			.byte $A8, $54, $38, $00
+>21a0	c0 5c 50 00			.byte $C0, $5C, $50, $00
+>21a4	bc 70 50 00			.byte $BC, $70, $50, $00
+>21a8	d0 74 68 00			.byte $D0, $74, $68, $00
+>21ac	cc 88 68 00			.byte $CC, $88, $68, $00
+>21b0	e0 8c 7c 00			.byte $E0, $8C, $7C, $00
+>21b4	dc 9c 7c 00			.byte $DC, $9C, $7C, $00
+>21b8	ec a4 90 00			.byte $EC, $A4, $90, $00
+>21bc	ec b4 90 00			.byte $EC, $B4, $90, $00
+
+;******  End of listing
