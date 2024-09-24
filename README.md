@@ -1,4 +1,11 @@
 # F256KsimpleASMdoodles
+
+**looking for examples in other languages?**
+
+_Go check my repo for Basic doodles here:_ https://github.com/Mu0n/F256KbasicBASICdoodles
+
+_Go check my repo for C doodles here:_ https://github.com/Mu0n/F256KsimpleCdoodles
+
 A collection of small assembly experiments for the F256Jr/K from Foenix Retro Systems. Compiled into .PGZ format for easy executing on the target hardware (or in the FoenixIDE emulator).
 
 ## Foenix Retro Systems
